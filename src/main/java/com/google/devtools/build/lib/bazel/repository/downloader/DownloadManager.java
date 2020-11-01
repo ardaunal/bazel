@@ -45,7 +45,7 @@ public class DownloadManager {
   private final RepositoryCache repositoryCache;
   private List<Path> distdir = ImmutableList.of();
   private UrlRewriter rewriter;
-  private final Downloader downloader;
+  private Downloader downloader;
 
   public DownloadManager(RepositoryCache repositoryCache, Downloader downloader) {
     this.repositoryCache = repositoryCache;
@@ -58,6 +58,10 @@ public class DownloadManager {
 
   public void setUrlRewriter(UrlRewriter rewriter) {
     this.rewriter = rewriter;
+  }
+
+  public void setDownloader(Downloader downloader) {
+    this.downloader = downloader;
   }
 
   /**
