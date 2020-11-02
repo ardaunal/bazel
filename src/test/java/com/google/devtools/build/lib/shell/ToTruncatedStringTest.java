@@ -63,9 +63,28 @@ public class ToTruncatedStringTest {
   }
 
   @Test
+  public void testTruncatingEmptyStringYieldsEmptyString() {
+    String emptyString = "";
+    assertThat(LogUtil.toTruncatedString(emptyString.getBytes())).isEqualTo(emptyString);
+  }
+
+  @Test
   public void testTruncatingHelloWorldYieldsHelloWorld() {
     String helloWorld = "Hello, world.";
     assertThat(LogUtil.toTruncatedString(helloWorld.getBytes())).isEqualTo(helloWorld);
   }
 
+  @Test
+  public void testTruncating150ByteStringYields150ByteString() {
+    String string150Bytes = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    assertThat(LogUtil.toTruncatedString(string150Bytes .getBytes())).isEqualTo(string150Bytes);
+  }
+
+  @Test
+  public void testTruncating151ByteStringYieldsTruncatedString() {
+    String string151Bytes = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    String expectedOutput = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "[... truncated. original size was 151 bytes.]"; 
+    assertThat(LogUtil.toTruncatedString(string151Bytes .getBytes())).isEqualTo(expectedOutput);
+  }
+  
 }
