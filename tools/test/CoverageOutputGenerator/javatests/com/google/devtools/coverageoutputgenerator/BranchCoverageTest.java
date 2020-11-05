@@ -49,6 +49,234 @@ public class BranchCoverageTest {
   }
 
   @Test
+  public void testFirstTransition() {
+    int arbitraryLineNumber = 3;
+    String arbitraryBlockNumber = "3", arbitraryBranchNumber = "2";
+    BranchCoverage b0 = BranchCoverage.create(arbitraryLineNumber, 0);
+    // FIRST CLASS REPRESENTATION
+    // First node 
+    assertThat(b0.lineNumber()).isEqualTo(3);
+    assertThat(b0.evaluated()).isFalse();
+    assertThat(b0.wasExecuted()).isFalse();
+    // First transition
+    BranchCoverage b1 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m0 = BranchCoverage.merge(b0, b1); 
+    assertThat(m0.lineNumber()).isEqualTo(3);
+    assertThat(m0.evaluated()).isTrue();
+    assertThat(m0.wasExecuted()).isFalse();
+    // SECOND CLASS REPRESENTATION
+    // First node
+    b0 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, false, 0);
+    assertThat(b0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(b0.nrOfExecutions()).isEqualTo(0);
+    // First Transition
+    b1 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m0 = BranchCoverage.merge(b0, b1);
+    assertThat(m0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m0.nrOfExecutions()).isEqualTo(1);
+  }
+
+  @Test
+  public void testSecondTransition() {
+    int arbitraryLineNumber = 3;
+    String arbitraryBlockNumber = "3", arbitraryBranchNumber = "2";
+    // FIRST CLASS REPRESENTATION
+    BranchCoverage b0 = BranchCoverage.create(arbitraryLineNumber, 0);
+    // First node 
+    assertThat(b0.lineNumber()).isEqualTo(3);
+    assertThat(b0.evaluated()).isFalse();
+    assertThat(b0.wasExecuted()).isFalse();
+    // Branch evaluated 
+    BranchCoverage b1 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m0 = BranchCoverage.merge(b0, b1); 
+    assertThat(m0.lineNumber()).isEqualTo(3);
+    assertThat(m0.evaluated()).isTrue();
+    assertThat(m0.wasExecuted()).isFalse();
+    // Branch evaluated
+    BranchCoverage b2 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m1 = BranchCoverage.merge(m0, b2); 
+    assertThat(m1.lineNumber()).isEqualTo(3);
+    assertThat(m1.evaluated()).isTrue();
+    assertThat(m1.wasExecuted()).isFalse();
+    // Branch evaluated
+    BranchCoverage b3 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m2 = BranchCoverage.merge(m1, b3); 
+    assertThat(m2.lineNumber()).isEqualTo(3);
+    assertThat(m2.evaluated()).isTrue();
+    assertThat(m2.wasExecuted()).isFalse();
+    // SECOND CLASS REPRESENTATION
+    // First node
+    b0 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, false, 0);
+    assertThat(b0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(b0.nrOfExecutions()).isEqualTo(0);
+    // Branch evaluated
+    b1 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m0 = BranchCoverage.merge(b0, b1);
+    assertThat(m0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m0.nrOfExecutions()).isEqualTo(1);
+    // Branch evaluated
+    b2 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m1 = BranchCoverage.merge(m0, b2);
+    assertThat(m1.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m1.nrOfExecutions()).isEqualTo(2);
+    // Branch evaluated
+    b3 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m2 = BranchCoverage.merge(m1, b3);
+    assertThat(m2.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m2.nrOfExecutions()).isEqualTo(3);
+  }
+
+  @Test
+  public void testThirdTransition() {
+    int arbitraryLineNumber = 3;
+    String arbitraryBlockNumber = "3", arbitraryBranchNumber = "2";
+    BranchCoverage b0 = BranchCoverage.create(arbitraryLineNumber, 0);
+    // FIRST CLASS REPRESENTATION
+    // First node 
+    assertThat(b0.lineNumber()).isEqualTo(3);
+    assertThat(b0.evaluated()).isFalse();
+    assertThat(b0.wasExecuted()).isFalse();
+    // Branch evaluated
+    BranchCoverage b1 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m0 = BranchCoverage.merge(b0, b1); 
+    assertThat(m0.lineNumber()).isEqualTo(3);
+    assertThat(m0.evaluated()).isTrue();
+    assertThat(m0.wasExecuted()).isFalse();
+    // Branch taken
+    BranchCoverage b2 = BranchCoverage.create(arbitraryLineNumber, 2);
+    BranchCoverage m1 = BranchCoverage.merge(m0, b2); 
+    assertThat(m1.lineNumber()).isEqualTo(3);
+    assertThat(m1.evaluated()).isTrue();
+    assertThat(m1.wasExecuted()).isTrue();
+    // SECOND CLASS REPRESENTATION
+    // First node
+    b0 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, false, 0);
+    assertThat(b0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(b0.nrOfExecutions()).isEqualTo(0);
+    // Branch evaluated
+    b1 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m0 = BranchCoverage.merge(b0, b1);
+    assertThat(m0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m0.nrOfExecutions()).isEqualTo(1);
+    // Branch taken
+    b2 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m1 = BranchCoverage.merge(m0, b2);
+    assertThat(m1.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m1.nrOfExecutions()).isEqualTo(2);
+  }
+
+  @Test
+  public void testFourthTransition() {
+    int arbitraryLineNumber = 3;
+    String arbitraryBlockNumber = "3", arbitraryBranchNumber = "2";
+    BranchCoverage b0 = BranchCoverage.create(arbitraryLineNumber, 0);
+    // FIRST CLASS REPRESENTATION
+    // First node 
+    assertThat(b0.lineNumber()).isEqualTo(3);
+    assertThat(b0.evaluated()).isFalse();
+    assertThat(b0.wasExecuted()).isFalse();
+    // Branch evaluated
+    BranchCoverage b1 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m0 = BranchCoverage.merge(b0, b1); 
+    assertThat(m0.lineNumber()).isEqualTo(3);
+    assertThat(m0.evaluated()).isTrue();
+    assertThat(m0.wasExecuted()).isFalse();
+    // Branch taken
+    BranchCoverage b2 = BranchCoverage.create(arbitraryLineNumber, 2);
+    BranchCoverage m1 = BranchCoverage.merge(m0, b2); 
+    assertThat(m1.lineNumber()).isEqualTo(3);
+    assertThat(m1.evaluated()).isTrue();
+    assertThat(m1.wasExecuted()).isTrue();
+    // Branch evaluated
+    BranchCoverage b3 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m2 = BranchCoverage.merge(m1, b3); 
+    assertThat(m2.lineNumber()).isEqualTo(3);
+    assertThat(m2.evaluated()).isTrue();
+    assertThat(m2.wasExecuted()).isTrue();
+    // SECOND CLASS REPRESENTATION
+    // First node
+    b0 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, false, 0);
+    assertThat(b0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(b0.nrOfExecutions()).isEqualTo(0);
+    // Branch evaluated
+    b1 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m0 = BranchCoverage.merge(b0, b1);
+    assertThat(m0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m0.nrOfExecutions()).isEqualTo(1);
+    // Branch taken
+    b2 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m1 = BranchCoverage.merge(m0, b2);
+    assertThat(m1.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m1.nrOfExecutions()).isEqualTo(2);
+    // Branch evaluated
+    b3 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m2 = BranchCoverage.merge(m1, b3);
+    assertThat(m2.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m2.nrOfExecutions()).isEqualTo(3);
+  }
+
+  @Test
+  public void testFifthTransition() {
+    int arbitraryLineNumber = 3;
+    String arbitraryBlockNumber = "3", arbitraryBranchNumber = "2";
+    BranchCoverage b0 = BranchCoverage.create(arbitraryLineNumber, 0);
+    // FIRST CLASS REPRESENTATION
+    // First node 
+    assertThat(b0.lineNumber()).isEqualTo(3);
+    assertThat(b0.evaluated()).isFalse();
+    assertThat(b0.wasExecuted()).isFalse();
+    // Branch evaluated
+    BranchCoverage b1 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m0 = BranchCoverage.merge(b0, b1); 
+    assertThat(m0.lineNumber()).isEqualTo(3);
+    assertThat(m0.evaluated()).isTrue();
+    assertThat(m0.wasExecuted()).isFalse();
+    // Branch taken
+    BranchCoverage b2 = BranchCoverage.create(arbitraryLineNumber, 2);
+    BranchCoverage m1 = BranchCoverage.merge(m0, b2); 
+    assertThat(m1.lineNumber()).isEqualTo(3);
+    assertThat(m1.evaluated()).isTrue();
+    assertThat(m1.wasExecuted()).isTrue();
+    // Branch evaluated
+    BranchCoverage b3 = BranchCoverage.create(arbitraryLineNumber, 1);
+    BranchCoverage m2 = BranchCoverage.merge(m1, b3); 
+    assertThat(m2.lineNumber()).isEqualTo(3);
+    assertThat(m2.evaluated()).isTrue();
+    assertThat(m2.wasExecuted()).isTrue();
+    // Branch taken
+    BranchCoverage b4 = BranchCoverage.create(arbitraryLineNumber, 2);
+    BranchCoverage m3 = BranchCoverage.merge(m2, b4); 
+    assertThat(m3.lineNumber()).isEqualTo(3);
+    assertThat(m3.evaluated()).isTrue();
+    assertThat(m3.wasExecuted()).isTrue();
+    // SECOND CLASS REPRESENTATION
+    // First node
+    b0 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, false, 0);
+    assertThat(b0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(b0.nrOfExecutions()).isEqualTo(0);
+    // Branch evaluated
+    b1 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m0 = BranchCoverage.merge(b0, b1);
+    assertThat(m0.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m0.nrOfExecutions()).isEqualTo(1);
+    // Branch taken
+    b2 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m1 = BranchCoverage.merge(m0, b2);
+    assertThat(m1.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m1.nrOfExecutions()).isEqualTo(2);
+    // Branch evaluated
+    b3 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m2 = BranchCoverage.merge(m1, b3);
+    assertThat(m2.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m2.nrOfExecutions()).isEqualTo(3);
+    // Branch taken
+    b4 = BranchCoverage.createWithBlockAndBranch(arbitraryLineNumber, arbitraryBlockNumber, arbitraryBranchNumber, true, 1);
+    m3 = BranchCoverage.merge(m2, b4);
+    assertThat(m3.lineNumber()).isEqualTo(arbitraryLineNumber);
+    assertThat(m3.nrOfExecutions()).isEqualTo(4);
+  }
+
+  @Test
   public void testNoBlockBranchInvalidValuesFail() {
     assertThrows(VerifyException.class, () -> BranchCoverage.create(3, -1));
     assertThrows(VerifyException.class, () -> BranchCoverage.create(3, 4));
