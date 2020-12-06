@@ -149,4 +149,62 @@ public class DigraphTest {
                 Label.create("pkg", "e"),
                 Label.create("pkg", "g")));
   }
+
+  @Test
+  public void testStableOrdering2() throws Exception {
+    Digraph<Target> digraph = new Digraph<>();
+    FakeTarget a = new FakeTarget(Label.create("pkg", "a"));
+    FakeTarget b = new FakeTarget(Label.create("pkg", "b"));
+    FakeTarget c = new FakeTarget(Label.create("pkg", "c"));
+    FakeTarget d = new FakeTarget(Label.create("pkg", "d"));
+    FakeTarget e = new FakeTarget(Label.create("pkg", "e"));
+    FakeTarget f = new FakeTarget(Label.create("pkg", "f"));
+    FakeTarget g = new FakeTarget(Label.create("pkg", "g"));
+    //    f
+    //      \
+    //       d
+    //      / \
+    //      a  b
+    //     /
+    //    c
+    //   /
+    //  e
+    // /
+    //g
+    digraph.addEdge(f, d);
+    digraph.addEdge(d, a);
+    digraph.addEdge(d, b);
+    digraph.addEdge(a, c);
+    digraph.addEdge(c, e);
+    digraph.addEdge(e, g);
+
+    // Get them back in topological and, within a valid topological ordering, alphabetical order.
+    Comparator<Target> comparator = new Comparator<Target>() {
+      @Override
+      public int compare(Target o1, Target o2) {
+        return o1.getLabel().compareTo(o2.getLabel()) * -1;
+      }
+    };
+
+    // Unwrap the Label from the Node<Target>, to make the final assert prettier.
+    Function<? super Node<Target>, Label> unwrap =
+        new Function<Node<Target>, Label>() {
+          @Override
+          public Label apply(Node<Target> node) {
+            return node.getLabel().getLabel();
+          }
+        };
+    List<Label> nodes = Lists.transform(digraph.getTopologicalOrder(comparator), unwrap);
+    assertThat(nodes)
+        .containsExactlyElementsIn(
+            ImmutableList.of(
+                Label.create("pkg", "f"),
+                Label.create("pkg", "d"),
+                Label.create("pkg", "a"),
+                Label.create("pkg", "b"),
+                Label.create("pkg", "c"),
+                Label.create("pkg", "e"),
+                Label.create("pkg", "g")));
+  }
+
 }
