@@ -1,7 +1,6 @@
 // Copyright 2018 The Bazel Authors. All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// Licensed under the Apache License, Version 2.0 (the "License"); // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //    http://www.apache.org/licenses/LICENSE-2.0
@@ -1389,6 +1388,65 @@ public class RemoteCacheTests {
     assertThat(digestUtil.compute(execRoot.getRelative("a/bar/foo/file"))).isEqualTo(fileDigest);
     assertThat(digestUtil.compute(execRoot.getRelative("a/foo/file"))).isEqualTo(fileDigest);
   }
+
+  @Test
+  public void testDownloadDirectoryWithSameHash2() throws Exception {
+    // Test that downloading an output directory works when two Directory
+    // protos have the same hash i.e. because they have the same name and contents or are empty.
+
+    /*
+     * /bar/foo/file
+     * /foo/file
+     * /arda/file
+     */
+
+    // arrange
+    Digest fileDigest = digestUtil.computeAsUtf8("file");
+    FileNode file = FileNode.newBuilder().setName("file").setDigest(fileDigest).build();
+    Directory fooDir = Directory.newBuilder().addFiles(file).build();
+    Digest fooDigest = digestUtil.compute(fooDir);
+    DirectoryNode fooDirNode =
+        DirectoryNode.newBuilder().setName("foo").setDigest(fooDigest).build();
+
+    Directory ardaDir = Directory.newBuilder().addFiles(file).build();
+    Digest ardaDigest = digestUtil.compute(ardaDir);
+    DirectoryNode ardaDirNode =
+        DirectoryNode.newBuilder().setName("arda").setDigest(ardaDigest).build();
+
+    Directory barDir = Directory.newBuilder().addDirectories(fooDirNode).build();
+    Digest barDigest = digestUtil.compute(barDir);
+    DirectoryNode barDirNode =
+        DirectoryNode.newBuilder().setName("bar").setDigest(barDigest).build();
+    Directory rootDir =
+        Directory.newBuilder().addDirectories(fooDirNode).addDirectories(barDirNode).addDirectories(ardaDirNode).build();
+
+    Tree tree =
+        Tree.newBuilder()
+            .setRoot(rootDir)
+            .addChildren(barDir)
+            .addChildren(fooDir)
+            .addChildren(fooDir)
+            .addChildren(ardaDir)
+            .build();
+    Digest treeDigest = digestUtil.compute(tree);
+
+    final ConcurrentMap<Digest, byte[]> map = new ConcurrentHashMap<>();
+    map.put(fileDigest, "file".getBytes(UTF_8));
+    map.put(treeDigest, tree.toByteArray());
+
+    ActionResult.Builder result = ActionResult.newBuilder();
+    result.addOutputDirectoriesBuilder().setPath("a/").setTreeDigest(treeDigest);
+
+    // act
+    RemoteCache remoteCache = newRemoteCache(map);
+    remoteCache.download(result.build(), execRoot, null, /* outputFilesLocker= */ () -> {});
+
+    // assert
+    assertThat(digestUtil.compute(execRoot.getRelative("a/bar/foo/file"))).isEqualTo(fileDigest);
+    assertThat(digestUtil.compute(execRoot.getRelative("a/foo/file"))).isEqualTo(fileDigest);
+    assertThat(digestUtil.compute(execRoot.getRelative("a/arda/file"))).isEqualTo(fileDigest);
+  }
+
 
   @Test
   public void testUploadDirectory() throws Exception {

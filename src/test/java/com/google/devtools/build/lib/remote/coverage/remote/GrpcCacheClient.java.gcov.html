@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.dat - remote/GrpcCacheClient.java</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">remote</a> - GrpcCacheClient.java<span style="font-size: 80%;"> (source / <a href="GrpcCacheClient.java.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.dat</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">152</td>
+            <td class="headerCovTableEntry">169</td>
+            <td class="headerCovTableEntryMed">89.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-12-07 02:14:16</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryHi">94.7 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryMed">84.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : // Copyright 2016 The Bazel Authors. All rights reserved.</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : //</a>
+<a name="3"><span class="lineNum">       3 </span>                :            : // Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</a>
+<a name="4"><span class="lineNum">       4 </span>                :            : // you may not use this file except in compliance with the License.</a>
+<a name="5"><span class="lineNum">       5 </span>                :            : // You may obtain a copy of the License at</a>
+<a name="6"><span class="lineNum">       6 </span>                :            : //</a>
+<a name="7"><span class="lineNum">       7 </span>                :            : //    http://www.apache.org/licenses/LICENSE-2.0</a>
+<a name="8"><span class="lineNum">       8 </span>                :            : //</a>
+<a name="9"><span class="lineNum">       9 </span>                :            : // Unless required by applicable law or agreed to in writing, software</a>
+<a name="10"><span class="lineNum">      10 </span>                :            : // distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</a>
+<a name="11"><span class="lineNum">      11 </span>                :            : // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</a>
+<a name="12"><span class="lineNum">      12 </span>                :            : // See the License for the specific language governing permissions and</a>
+<a name="13"><span class="lineNum">      13 </span>                :            : // limitations under the License.</a>
+<a name="14"><span class="lineNum">      14 </span>                :            : </a>
+<a name="15"><span class="lineNum">      15 </span>                :            : package com.google.devtools.build.lib.remote;</a>
+<a name="16"><span class="lineNum">      16 </span>                :            : </a>
+<a name="17"><span class="lineNum">      17 </span>                :            : import static com.google.common.base.Strings.isNullOrEmpty;</a>
+<a name="18"><span class="lineNum">      18 </span>                :            : </a>
+<a name="19"><span class="lineNum">      19 </span>                :            : import build.bazel.remote.execution.v2.ActionCacheGrpc;</a>
+<a name="20"><span class="lineNum">      20 </span>                :            : import build.bazel.remote.execution.v2.ActionCacheGrpc.ActionCacheBlockingStub;</a>
+<a name="21"><span class="lineNum">      21 </span>                :            : import build.bazel.remote.execution.v2.ActionCacheGrpc.ActionCacheFutureStub;</a>
+<a name="22"><span class="lineNum">      22 </span>                :            : import build.bazel.remote.execution.v2.ActionResult;</a>
+<a name="23"><span class="lineNum">      23 </span>                :            : import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc;</a>
+<a name="24"><span class="lineNum">      24 </span>                :            : import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddressableStorageFutureStub;</a>
+<a name="25"><span class="lineNum">      25 </span>                :            : import build.bazel.remote.execution.v2.Digest;</a>
+<a name="26"><span class="lineNum">      26 </span>                :            : import build.bazel.remote.execution.v2.FindMissingBlobsRequest;</a>
+<a name="27"><span class="lineNum">      27 </span>                :            : import build.bazel.remote.execution.v2.FindMissingBlobsResponse;</a>
+<a name="28"><span class="lineNum">      28 </span>                :            : import build.bazel.remote.execution.v2.GetActionResultRequest;</a>
+<a name="29"><span class="lineNum">      29 </span>                :            : import build.bazel.remote.execution.v2.RequestMetadata;</a>
+<a name="30"><span class="lineNum">      30 </span>                :            : import build.bazel.remote.execution.v2.UpdateActionResultRequest;</a>
+<a name="31"><span class="lineNum">      31 </span>                :            : import com.google.bytestream.ByteStreamGrpc;</a>
+<a name="32"><span class="lineNum">      32 </span>                :            : import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;</a>
+<a name="33"><span class="lineNum">      33 </span>                :            : import com.google.bytestream.ByteStreamProto.ReadRequest;</a>
+<a name="34"><span class="lineNum">      34 </span>                :            : import com.google.bytestream.ByteStreamProto.ReadResponse;</a>
+<a name="35"><span class="lineNum">      35 </span>                :            : import com.google.common.annotations.VisibleForTesting;</a>
+<a name="36"><span class="lineNum">      36 </span>                :            : import com.google.common.base.Ascii;</a>
+<a name="37"><span class="lineNum">      37 </span>                :            : import com.google.common.base.Preconditions;</a>
+<a name="38"><span class="lineNum">      38 </span>                :            : import com.google.common.collect.ImmutableSet;</a>
+<a name="39"><span class="lineNum">      39 </span>                :            : import com.google.common.collect.Iterables;</a>
+<a name="40"><span class="lineNum">      40 </span>                :            : import com.google.common.hash.HashCode;</a>
+<a name="41"><span class="lineNum">      41 </span>                :            : import com.google.common.hash.HashingOutputStream;</a>
+<a name="42"><span class="lineNum">      42 </span>                :            : import com.google.common.util.concurrent.Futures;</a>
+<a name="43"><span class="lineNum">      43 </span>                :            : import com.google.common.util.concurrent.ListenableFuture;</a>
+<a name="44"><span class="lineNum">      44 </span>                :            : import com.google.common.util.concurrent.MoreExecutors;</a>
+<a name="45"><span class="lineNum">      45 </span>                :            : import com.google.common.util.concurrent.SettableFuture;</a>
+<a name="46"><span class="lineNum">      46 </span>                :            : import com.google.devtools.build.lib.authandtls.CallCredentialsProvider;</a>
+<a name="47"><span class="lineNum">      47 </span>                :            : import com.google.devtools.build.lib.concurrent.ThreadSafety.ThreadSafe;</a>
+<a name="48"><span class="lineNum">      48 </span>                :            : import com.google.devtools.build.lib.remote.RemoteRetrier.ProgressiveBackoff;</a>
+<a name="49"><span class="lineNum">      49 </span>                :            : import com.google.devtools.build.lib.remote.common.CacheNotFoundException;</a>
+<a name="50"><span class="lineNum">      50 </span>                :            : import com.google.devtools.build.lib.remote.common.MissingDigestsFinder;</a>
+<a name="51"><span class="lineNum">      51 </span>                :            : import com.google.devtools.build.lib.remote.common.RemoteCacheClient;</a>
+<a name="52"><span class="lineNum">      52 </span>                :            : import com.google.devtools.build.lib.remote.options.RemoteOptions;</a>
+<a name="53"><span class="lineNum">      53 </span>                :            : import com.google.devtools.build.lib.remote.util.DigestUtil;</a>
+<a name="54"><span class="lineNum">      54 </span>                :            : import com.google.devtools.build.lib.remote.util.TracingMetadataUtils;</a>
+<a name="55"><span class="lineNum">      55 </span>                :            : import com.google.devtools.build.lib.remote.util.Utils;</a>
+<a name="56"><span class="lineNum">      56 </span>                :            : import com.google.devtools.build.lib.vfs.Path;</a>
+<a name="57"><span class="lineNum">      57 </span>                :            : import com.google.protobuf.ByteString;</a>
+<a name="58"><span class="lineNum">      58 </span>                :            : import io.grpc.Context;</a>
+<a name="59"><span class="lineNum">      59 </span>                :            : import io.grpc.Status;</a>
+<a name="60"><span class="lineNum">      60 </span>                :            : import io.grpc.Status.Code;</a>
+<a name="61"><span class="lineNum">      61 </span>                :            : import io.grpc.StatusRuntimeException;</a>
+<a name="62"><span class="lineNum">      62 </span>                :            : import io.grpc.stub.StreamObserver;</a>
+<a name="63"><span class="lineNum">      63 </span>                :            : import java.io.IOException;</a>
+<a name="64"><span class="lineNum">      64 </span>                :            : import java.io.OutputStream;</a>
+<a name="65"><span class="lineNum">      65 </span>                :            : import java.util.ArrayList;</a>
+<a name="66"><span class="lineNum">      66 </span>                :            : import java.util.List;</a>
+<a name="67"><span class="lineNum">      67 </span>                :            : import java.util.concurrent.TimeUnit;</a>
+<a name="68"><span class="lineNum">      68 </span>                :            : import java.util.concurrent.atomic.AtomicBoolean;</a>
+<a name="69"><span class="lineNum">      69 </span>                :            : import java.util.concurrent.atomic.AtomicLong;</a>
+<a name="70"><span class="lineNum">      70 </span>                :            : import java.util.function.Supplier;</a>
+<a name="71"><span class="lineNum">      71 </span>                :            : import javax.annotation.Nullable;</a>
+<a name="72"><span class="lineNum">      72 </span>                :            : </a>
+<a name="73"><span class="lineNum">      73 </span>                :            : /** A RemoteActionCache implementation that uses gRPC calls to a remote cache server. */</a>
+<a name="74"><span class="lineNum">      74 </span>                :            : @ThreadSafe</a>
+<a name="75"><span class="lineNum">      75 </span>                :            : public class GrpcCacheClient implements RemoteCacheClient, MissingDigestsFinder {</a>
+<a name="76"><span class="lineNum">      76 </span>                :            :   private final CallCredentialsProvider callCredentialsProvider;</a>
+<a name="77"><span class="lineNum">      77 </span>                :            :   private final ReferenceCountedChannel channel;</a>
+<a name="78"><span class="lineNum">      78 </span>                :            :   private final RemoteOptions options;</a>
+<a name="79"><span class="lineNum">      79 </span>                :            :   private final DigestUtil digestUtil;</a>
+<a name="80"><span class="lineNum">      80 </span>                :            :   private final RemoteRetrier retrier;</a>
+<a name="81"><span class="lineNum">      81 </span>                :            :   private final ByteStreamUploader uploader;</a>
+<a name="82"><span class="lineNum">      82 </span>                :            :   private final int maxMissingBlobsDigestsPerMessage;</a>
+<a name="83"><span class="lineNum">      83 </span>                :            : </a>
+<a name="84"><span class="lineNum">      84 </span>                :<span class="lineCov">          1 :   private AtomicBoolean closed = new AtomicBoolean();</span></a>
+<a name="85"><span class="lineNum">      85 </span>                :            : </a>
+<a name="86"><span class="lineNum">      86 </span>                :            :   @VisibleForTesting</a>
+<a name="87"><span class="lineNum">      87 </span>                :            :   public GrpcCacheClient(</a>
+<a name="88"><span class="lineNum">      88 </span>                :            :       ReferenceCountedChannel channel,</a>
+<a name="89"><span class="lineNum">      89 </span>                :            :       CallCredentialsProvider callCredentialsProvider,</a>
+<a name="90"><span class="lineNum">      90 </span>                :            :       RemoteOptions options,</a>
+<a name="91"><span class="lineNum">      91 </span>                :            :       RemoteRetrier retrier,</a>
+<a name="92"><span class="lineNum">      92 </span>                :            :       DigestUtil digestUtil,</a>
+<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">          1 :       ByteStreamUploader uploader) {</span></a>
+<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">          1 :     this.callCredentialsProvider = callCredentialsProvider;</span></a>
+<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">          1 :     this.channel = channel;</span></a>
+<a name="96"><span class="lineNum">      96 </span>                :<span class="lineCov">          1 :     this.options = options;</span></a>
+<a name="97"><span class="lineNum">      97 </span>                :<span class="lineCov">          1 :     this.digestUtil = digestUtil;</span></a>
+<a name="98"><span class="lineNum">      98 </span>                :<span class="lineCov">          1 :     this.retrier = retrier;</span></a>
+<a name="99"><span class="lineNum">      99 </span>                :<span class="lineCov">          1 :     this.uploader = uploader;</span></a>
+<a name="100"><span class="lineNum">     100 </span>                :<span class="lineCov">          1 :     maxMissingBlobsDigestsPerMessage = computeMaxMissingBlobsDigestsPerMessage();</span></a>
+<a name="101"><span class="lineNum">     101 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">          1 :     Preconditions.checkState(</span></a>
+<a name="102"><span class="lineNum">     102 </span>                :            :         maxMissingBlobsDigestsPerMessage &gt; 0, &quot;Error: gRPC message size too small.&quot;);</a>
+<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">          1 :   }</span></a>
+<a name="104"><span class="lineNum">     104 </span>                :            : </a>
+<a name="105"><span class="lineNum">     105 </span>                :            :   private int computeMaxMissingBlobsDigestsPerMessage() {</a>
+<a name="106"><span class="lineNum">     106 </span>                :            :     final int overhead =</a>
+<a name="107"><span class="lineNum">     107 </span>                :<span class="lineCov">          1 :         FindMissingBlobsRequest.newBuilder()</span></a>
+<a name="108"><span class="lineNum">     108 </span>                :<span class="lineCov">          1 :             .setInstanceName(options.remoteInstanceName)</span></a>
+<a name="109"><span class="lineNum">     109 </span>                :<span class="lineCov">          1 :             .build()</span></a>
+<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          1 :             .getSerializedSize();</span></a>
+<a name="111"><span class="lineNum">     111 </span>                :            :     final int tagSize =</a>
+<a name="112"><span class="lineNum">     112 </span>                :<span class="lineCov">          1 :         FindMissingBlobsRequest.newBuilder()</span></a>
+<a name="113"><span class="lineNum">     113 </span>                :<span class="lineCov">          1 :                 .addBlobDigests(Digest.getDefaultInstance())</span></a>
+<a name="114"><span class="lineNum">     114 </span>                :<span class="lineCov">          1 :                 .build()</span></a>
+<a name="115"><span class="lineNum">     115 </span>                :<span class="lineCov">          1 :                 .getSerializedSize()</span></a>
+<a name="116"><span class="lineNum">     116 </span>                :<span class="lineCov">          1 :             - FindMissingBlobsRequest.getDefaultInstance().getSerializedSize();</span></a>
+<a name="117"><span class="lineNum">     117 </span>                :            :     // We assume all non-empty digests have the same size. This is true for fixed-length hashes.</a>
+<a name="118"><span class="lineNum">     118 </span>                :<span class="lineCov">          1 :     final int digestSize = digestUtil.compute(new byte[] {1}).getSerializedSize() + tagSize;</span></a>
+<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">          1 :     return (options.maxOutboundMessageSize - overhead) / digestSize;</span></a>
+<a name="120"><span class="lineNum">     120 </span>                :            :   }</a>
+<a name="121"><span class="lineNum">     121 </span>                :            : </a>
+<a name="122"><span class="lineNum">     122 </span>                :            :   private ContentAddressableStorageFutureStub casFutureStub() {</a>
+<a name="123"><span class="lineNum">     123 </span>                :<span class="lineCov">          1 :     return ContentAddressableStorageGrpc.newFutureStub(channel)</span></a>
+<a name="124"><span class="lineNum">     124 </span>                :<span class="lineCov">          1 :         .withInterceptors(TracingMetadataUtils.attachMetadataFromContextInterceptor())</span></a>
+<a name="125"><span class="lineNum">     125 </span>                :<span class="lineCov">          1 :         .withCallCredentials(callCredentialsProvider.getCallCredentials())</span></a>
+<a name="126"><span class="lineNum">     126 </span>                :<span class="lineCov">          1 :         .withDeadlineAfter(options.remoteTimeout.getSeconds(), TimeUnit.SECONDS);</span></a>
+<a name="127"><span class="lineNum">     127 </span>                :            :   }</a>
+<a name="128"><span class="lineNum">     128 </span>                :            : </a>
+<a name="129"><span class="lineNum">     129 </span>                :            :   private ByteStreamStub bsAsyncStub() {</a>
+<a name="130"><span class="lineNum">     130 </span>                :<span class="lineCov">          1 :     return ByteStreamGrpc.newStub(channel)</span></a>
+<a name="131"><span class="lineNum">     131 </span>                :<span class="lineCov">          1 :         .withInterceptors(TracingMetadataUtils.attachMetadataFromContextInterceptor())</span></a>
+<a name="132"><span class="lineNum">     132 </span>                :<span class="lineCov">          1 :         .withCallCredentials(callCredentialsProvider.getCallCredentials())</span></a>
+<a name="133"><span class="lineNum">     133 </span>                :<span class="lineCov">          1 :         .withDeadlineAfter(options.remoteTimeout.getSeconds(), TimeUnit.SECONDS);</span></a>
+<a name="134"><span class="lineNum">     134 </span>                :            :   }</a>
+<a name="135"><span class="lineNum">     135 </span>                :            : </a>
+<a name="136"><span class="lineNum">     136 </span>                :            :   private ActionCacheBlockingStub acBlockingStub() {</a>
+<a name="137"><span class="lineNum">     137 </span>                :<span class="lineCov">          1 :     return ActionCacheGrpc.newBlockingStub(channel)</span></a>
+<a name="138"><span class="lineNum">     138 </span>                :<span class="lineCov">          1 :         .withInterceptors(TracingMetadataUtils.attachMetadataFromContextInterceptor())</span></a>
+<a name="139"><span class="lineNum">     139 </span>                :<span class="lineCov">          1 :         .withCallCredentials(callCredentialsProvider.getCallCredentials())</span></a>
+<a name="140"><span class="lineNum">     140 </span>                :<span class="lineCov">          1 :         .withDeadlineAfter(options.remoteTimeout.getSeconds(), TimeUnit.SECONDS);</span></a>
+<a name="141"><span class="lineNum">     141 </span>                :            :   }</a>
+<a name="142"><span class="lineNum">     142 </span>                :            : </a>
+<a name="143"><span class="lineNum">     143 </span>                :            :   private ActionCacheFutureStub acFutureStub() {</a>
+<a name="144"><span class="lineNum">     144 </span>                :<span class="lineCov">          1 :     return ActionCacheGrpc.newFutureStub(channel)</span></a>
+<a name="145"><span class="lineNum">     145 </span>                :<span class="lineCov">          1 :         .withInterceptors(TracingMetadataUtils.attachMetadataFromContextInterceptor())</span></a>
+<a name="146"><span class="lineNum">     146 </span>                :<span class="lineCov">          1 :         .withCallCredentials(callCredentialsProvider.getCallCredentials())</span></a>
+<a name="147"><span class="lineNum">     147 </span>                :<span class="lineCov">          1 :         .withDeadlineAfter(options.remoteTimeout.getSeconds(), TimeUnit.SECONDS);</span></a>
+<a name="148"><span class="lineNum">     148 </span>                :            :   }</a>
+<a name="149"><span class="lineNum">     149 </span>                :            : </a>
+<a name="150"><span class="lineNum">     150 </span>                :            :   @Override</a>
+<a name="151"><span class="lineNum">     151 </span>                :            :   public void close() {</a>
+<a name="152"><span class="lineNum">     152 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if (closed.getAndSet(true)) {</span></a>
+<a name="153"><span class="lineNum">     153 </span>                :<span class="lineNoCov">          0 :       return;</span></a>
+<a name="154"><span class="lineNum">     154 </span>                :            :     }</a>
+<a name="155"><span class="lineNum">     155 </span>                :<span class="lineNoCov">          0 :     uploader.release();</span></a>
+<a name="156"><span class="lineNum">     156 </span>                :<span class="lineNoCov">          0 :     channel.release();</span></a>
+<a name="157"><span class="lineNum">     157 </span>                :<span class="lineNoCov">          0 :   }</span></a>
+<a name="158"><span class="lineNum">     158 </span>                :            : </a>
+<a name="159"><span class="lineNum">     159 </span>                :            :   /** Returns true if 'options.remoteCache' uses 'grpc' or an empty scheme */</a>
+<a name="160"><span class="lineNum">     160 </span>                :            :   public static boolean isRemoteCacheOptions(RemoteOptions options) {</a>
+<a name="161"><span class="lineNum">     161 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     if (isNullOrEmpty(options.remoteCache)) {</span></a>
+<a name="162"><span class="lineNum">     162 </span>                :<span class="lineCov">          1 :       return false;</span></a>
+<a name="163"><span class="lineNum">     163 </span>                :            :     }</a>
+<a name="164"><span class="lineNum">     164 </span>                :            :     // TODO(ishikhman): add proper URI validation/parsing for remote options</a>
+<a name="165"><span class="lineNum">     165 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     return !(Ascii.toLowerCase(options.remoteCache).startsWith(&quot;http://&quot;)</span></a>
+<a name="166"><span class="lineNum">     166 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :         || Ascii.toLowerCase(options.remoteCache).startsWith(&quot;https://&quot;));</span></a>
+<a name="167"><span class="lineNum">     167 </span>                :            :   }</a>
+<a name="168"><span class="lineNum">     168 </span>                :            : </a>
+<a name="169"><span class="lineNum">     169 </span>                :            :   @Override</a>
+<a name="170"><span class="lineNum">     170 </span>                :            :   public ListenableFuture&lt;ImmutableSet&lt;Digest&gt;&gt; findMissingDigests(Iterable&lt;Digest&gt; digests) {</a>
+<a name="171"><span class="lineNum">     171 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     if (Iterables.isEmpty(digests)) {</span></a>
+<a name="172"><span class="lineNum">     172 </span>                :<span class="lineNoCov">          0 :       return Futures.immediateFuture(ImmutableSet.of());</span></a>
+<a name="173"><span class="lineNum">     173 </span>                :            :     }</a>
+<a name="174"><span class="lineNum">     174 </span>                :            :     // Need to potentially split the digests into multiple requests.</a>
+<a name="175"><span class="lineNum">     175 </span>                :            :     FindMissingBlobsRequest.Builder requestBuilder =</a>
+<a name="176"><span class="lineNum">     176 </span>                :<span class="lineCov">          1 :         FindMissingBlobsRequest.newBuilder().setInstanceName(options.remoteInstanceName);</span></a>
+<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">          1 :     List&lt;ListenableFuture&lt;FindMissingBlobsResponse&gt;&gt; getMissingDigestCalls = new ArrayList&lt;&gt;();</span></a>
+<a name="178"><span class="lineNum">     178 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     for (Digest digest : digests) {</span></a>
+<a name="179"><span class="lineNum">     179 </span>                :<span class="lineCov">          1 :       requestBuilder.addBlobDigests(digest);</span></a>
+<a name="180"><span class="lineNum">     180 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :       if (requestBuilder.getBlobDigestsCount() == maxMissingBlobsDigestsPerMessage) {</span></a>
+<a name="181"><span class="lineNum">     181 </span>                :<span class="lineCov">          1 :         getMissingDigestCalls.add(getMissingDigests(requestBuilder.build()));</span></a>
+<a name="182"><span class="lineNum">     182 </span>                :<span class="lineCov">          1 :         requestBuilder.clearBlobDigests();</span></a>
+<a name="183"><span class="lineNum">     183 </span>                :            :       }</a>
+<a name="184"><span class="lineNum">     184 </span>                :<span class="lineCov">          1 :     }</span></a>
+<a name="185"><span class="lineNum">     185 </span>                :            : </a>
+<a name="186"><span class="lineNum">     186 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     if (requestBuilder.getBlobDigestsCount() &gt; 0) {</span></a>
+<a name="187"><span class="lineNum">     187 </span>                :<span class="lineCov">          1 :       getMissingDigestCalls.add(getMissingDigests(requestBuilder.build()));</span></a>
+<a name="188"><span class="lineNum">     188 </span>                :            :     }</a>
+<a name="189"><span class="lineNum">     189 </span>                :            : </a>
+<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">          1 :     ListenableFuture&lt;ImmutableSet&lt;Digest&gt;&gt; success =</span></a>
+<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">          1 :         Futures.whenAllSucceed(getMissingDigestCalls)</span></a>
+<a name="192"><span class="lineNum">     192 </span>                :<span class="lineCov">          1 :             .call(</span></a>
+<a name="193"><span class="lineNum">     193 </span>                :            :                 () -&gt; {</a>
+<a name="194"><span class="lineNum">     194 </span>                :<span class="lineCov">          1 :                   ImmutableSet.Builder&lt;Digest&gt; result = ImmutableSet.builder();</span></a>
+<a name="195"><span class="lineNum">     195 </span>                :            :                   for (ListenableFuture&lt;FindMissingBlobsResponse&gt; callFuture :</a>
+<a name="196"><span class="lineNum">     196 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :                       getMissingDigestCalls) {</span></a>
+<a name="197"><span class="lineNum">     197 </span>                :<span class="lineCov">          1 :                     result.addAll(callFuture.get().getMissingBlobDigestsList());</span></a>
+<a name="198"><span class="lineNum">     198 </span>                :<span class="lineCov">          1 :                   }</span></a>
+<a name="199"><span class="lineNum">     199 </span>                :<span class="lineCov">          1 :                   return result.build();</span></a>
+<a name="200"><span class="lineNum">     200 </span>                :            :                 },</a>
+<a name="201"><span class="lineNum">     201 </span>                :<span class="lineCov">          1 :                 MoreExecutors.directExecutor());</span></a>
+<a name="202"><span class="lineNum">     202 </span>                :            : </a>
+<a name="203"><span class="lineNum">     203 </span>                :<span class="lineCov">          1 :     RequestMetadata requestMetadata = TracingMetadataUtils.fromCurrentContext();</span></a>
+<a name="204"><span class="lineNum">     204 </span>                :<span class="lineCov">          1 :     return Futures.catchingAsync(</span></a>
+<a name="205"><span class="lineNum">     205 </span>                :            :         success,</a>
+<a name="206"><span class="lineNum">     206 </span>                :            :         RuntimeException.class,</a>
+<a name="207"><span class="lineNum">     207 </span>                :            :         (e) -&gt;</a>
+<a name="208"><span class="lineNum">     208 </span>                :<span class="lineNoCov">          0 :             Futures.immediateFailedFuture(</span></a>
+<a name="209"><span class="lineNum">     209 </span>                :            :                 new IOException(</a>
+<a name="210"><span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :                     String.format(</span></a>
+<a name="211"><span class="lineNum">     211 </span>                :            :                         &quot;findMissingBlobs(%d) for %s: %s&quot;,</a>
+<a name="212"><span class="lineNum">     212 </span>                :<span class="lineNoCov">          0 :                         requestBuilder.getBlobDigestsCount(),</span></a>
+<a name="213"><span class="lineNum">     213 </span>                :<span class="lineNoCov">          0 :                         requestMetadata.getActionId(),</span></a>
+<a name="214"><span class="lineNum">     214 </span>                :<span class="lineNoCov">          0 :                         e.getMessage()),</span></a>
+<a name="215"><span class="lineNum">     215 </span>                :            :                     e)),</a>
+<a name="216"><span class="lineNum">     216 </span>                :<span class="lineCov">          1 :         MoreExecutors.directExecutor());</span></a>
+<a name="217"><span class="lineNum">     217 </span>                :            :   }</a>
+<a name="218"><span class="lineNum">     218 </span>                :            : </a>
+<a name="219"><span class="lineNum">     219 </span>                :            :   private ListenableFuture&lt;FindMissingBlobsResponse&gt; getMissingDigests(</a>
+<a name="220"><span class="lineNum">     220 </span>                :            :       FindMissingBlobsRequest request) {</a>
+<a name="221"><span class="lineNum">     221 </span>                :<span class="lineCov">          1 :     Context ctx = Context.current();</span></a>
+<a name="222"><span class="lineNum">     222 </span>                :<span class="lineCov">          1 :     return Utils.refreshIfUnauthenticatedAsync(</span></a>
+<a name="223"><span class="lineNum">     223 </span>                :<span class="lineCov">          1 :         () -&gt; retrier.executeAsync(() -&gt; ctx.call(() -&gt; casFutureStub().findMissingBlobs(request))),</span></a>
+<a name="224"><span class="lineNum">     224 </span>                :            :         callCredentialsProvider);</a>
+<a name="225"><span class="lineNum">     225 </span>                :            :   }</a>
+<a name="226"><span class="lineNum">     226 </span>                :            : </a>
+<a name="227"><span class="lineNum">     227 </span>                :            :   private ListenableFuture&lt;ActionResult&gt; handleStatus(ListenableFuture&lt;ActionResult&gt; download) {</a>
+<a name="228"><span class="lineNum">     228 </span>                :<span class="lineCov">          1 :     return Futures.catchingAsync(</span></a>
+<a name="229"><span class="lineNum">     229 </span>                :            :         download,</a>
+<a name="230"><span class="lineNum">     230 </span>                :            :         StatusRuntimeException.class,</a>
+<a name="231"><span class="lineNum">     231 </span>                :            :         (sre) -&gt;</a>
+<a name="232"><span class="lineNum">     232 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :             sre.getStatus().getCode() == Code.NOT_FOUND</span></a>
+<a name="233"><span class="lineNum">     233 </span>                :            :                 // Return null to indicate that it was a cache miss.</a>
+<a name="234"><span class="lineNum">     234 </span>                :<span class="lineCov">          1 :                 ? Futures.immediateFuture(null)</span></a>
+<a name="235"><span class="lineNum">     235 </span>                :<span class="lineCov">          1 :                 : Futures.immediateFailedFuture(new IOException(sre)),</span></a>
+<a name="236"><span class="lineNum">     236 </span>                :<span class="lineCov">          1 :         MoreExecutors.directExecutor());</span></a>
+<a name="237"><span class="lineNum">     237 </span>                :            :   }</a>
+<a name="238"><span class="lineNum">     238 </span>                :            : </a>
+<a name="239"><span class="lineNum">     239 </span>                :            :   @Override</a>
+<a name="240"><span class="lineNum">     240 </span>                :            :   public ListenableFuture&lt;ActionResult&gt; downloadActionResult(</a>
+<a name="241"><span class="lineNum">     241 </span>                :            :       ActionKey actionKey, boolean inlineOutErr) {</a>
+<a name="242"><span class="lineNum">     242 </span>                :            :     GetActionResultRequest request =</a>
+<a name="243"><span class="lineNum">     243 </span>                :<span class="lineCov">          1 :         GetActionResultRequest.newBuilder()</span></a>
+<a name="244"><span class="lineNum">     244 </span>                :<span class="lineCov">          1 :             .setInstanceName(options.remoteInstanceName)</span></a>
+<a name="245"><span class="lineNum">     245 </span>                :<span class="lineCov">          1 :             .setActionDigest(actionKey.getDigest())</span></a>
+<a name="246"><span class="lineNum">     246 </span>                :<span class="lineCov">          1 :             .setInlineStderr(inlineOutErr)</span></a>
+<a name="247"><span class="lineNum">     247 </span>                :<span class="lineCov">          1 :             .setInlineStdout(inlineOutErr)</span></a>
+<a name="248"><span class="lineNum">     248 </span>                :<span class="lineCov">          1 :             .build();</span></a>
+<a name="249"><span class="lineNum">     249 </span>                :<span class="lineCov">          1 :     Context ctx = Context.current();</span></a>
+<a name="250"><span class="lineNum">     250 </span>                :<span class="lineCov">          1 :     return Utils.refreshIfUnauthenticatedAsync(</span></a>
+<a name="251"><span class="lineNum">     251 </span>                :            :         () -&gt;</a>
+<a name="252"><span class="lineNum">     252 </span>                :<span class="lineCov">          1 :             retrier.executeAsync(</span></a>
+<a name="253"><span class="lineNum">     253 </span>                :<span class="lineCov">          1 :                 () -&gt; ctx.call(() -&gt; handleStatus(acFutureStub().getActionResult(request)))),</span></a>
+<a name="254"><span class="lineNum">     254 </span>                :            :         callCredentialsProvider);</a>
+<a name="255"><span class="lineNum">     255 </span>                :            :   }</a>
+<a name="256"><span class="lineNum">     256 </span>                :            : </a>
+<a name="257"><span class="lineNum">     257 </span>                :            :   @Override</a>
+<a name="258"><span class="lineNum">     258 </span>                :            :   public void uploadActionResult(ActionKey actionKey, ActionResult actionResult)</a>
+<a name="259"><span class="lineNum">     259 </span>                :            :       throws IOException, InterruptedException {</a>
+<a name="260"><span class="lineNum">     260 </span>                :            :     try {</a>
+<a name="261"><span class="lineNum">     261 </span>                :<span class="lineCov">          1 :       Utils.refreshIfUnauthenticated(</span></a>
+<a name="262"><span class="lineNum">     262 </span>                :            :           () -&gt;</a>
+<a name="263"><span class="lineNum">     263 </span>                :<span class="lineCov">          1 :               retrier.execute(</span></a>
+<a name="264"><span class="lineNum">     264 </span>                :            :                   () -&gt;</a>
+<a name="265"><span class="lineNum">     265 </span>                :<span class="lineCov">          1 :                       acBlockingStub()</span></a>
+<a name="266"><span class="lineNum">     266 </span>                :<span class="lineCov">          1 :                           .updateActionResult(</span></a>
+<a name="267"><span class="lineNum">     267 </span>                :<span class="lineCov">          1 :                               UpdateActionResultRequest.newBuilder()</span></a>
+<a name="268"><span class="lineNum">     268 </span>                :<span class="lineCov">          1 :                                   .setInstanceName(options.remoteInstanceName)</span></a>
+<a name="269"><span class="lineNum">     269 </span>                :<span class="lineCov">          1 :                                   .setActionDigest(actionKey.getDigest())</span></a>
+<a name="270"><span class="lineNum">     270 </span>                :<span class="lineCov">          1 :                                   .setActionResult(actionResult)</span></a>
+<a name="271"><span class="lineNum">     271 </span>                :<span class="lineCov">          1 :                                   .build())),</span></a>
+<a name="272"><span class="lineNum">     272 </span>                :            :           callCredentialsProvider);</a>
+<a name="273"><span class="lineNum">     273 </span>                :<span class="lineNoCov">          0 :     } catch (StatusRuntimeException e) {</span></a>
+<a name="274"><span class="lineNum">     274 </span>                :<span class="lineNoCov">          0 :       throw new IOException(e);</span></a>
+<a name="275"><span class="lineNum">     275 </span>                :<span class="lineCov">          1 :     }</span></a>
+<a name="276"><span class="lineNum">     276 </span>                :<span class="lineCov">          1 :   }</span></a>
+<a name="277"><span class="lineNum">     277 </span>                :            : </a>
+<a name="278"><span class="lineNum">     278 </span>                :            :   @Override</a>
+<a name="279"><span class="lineNum">     279 </span>                :            :   public ListenableFuture&lt;Void&gt; downloadBlob(Digest digest, OutputStream out) {</a>
+<a name="280"><span class="lineNum">     280 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     if (digest.getSizeBytes() == 0) {</span></a>
+<a name="281"><span class="lineNum">     281 </span>                :<span class="lineCov">          1 :       return Futures.immediateFuture(null);</span></a>
+<a name="282"><span class="lineNum">     282 </span>                :            :     }</a>
+<a name="283"><span class="lineNum">     283 </span>                :            : </a>
+<a name="284"><span class="lineNum">     284 </span>                :<span class="lineCov">          1 :     @Nullable Supplier&lt;HashCode&gt; hashSupplier = null;</span></a>
+<a name="285"><span class="lineNum">     285 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :     if (options.remoteVerifyDownloads) {</span></a>
+<a name="286"><span class="lineNum">     286 </span>                :<span class="lineCov">          1 :       HashingOutputStream hashOut = digestUtil.newHashingOutputStream(out);</span></a>
+<a name="287"><span class="lineNum">     287 </span>                :<span class="lineCov">          1 :       hashSupplier = hashOut::hash;</span></a>
+<a name="288"><span class="lineNum">     288 </span>                :<span class="lineCov">          1 :       out = hashOut;</span></a>
+<a name="289"><span class="lineNum">     289 </span>                :            :     }</a>
+<a name="290"><span class="lineNum">     290 </span>                :            : </a>
+<a name="291"><span class="lineNum">     291 </span>                :<span class="lineCov">          1 :     return downloadBlob(digest, out, hashSupplier);</span></a>
+<a name="292"><span class="lineNum">     292 </span>                :            :   }</a>
+<a name="293"><span class="lineNum">     293 </span>                :            : </a>
+<a name="294"><span class="lineNum">     294 </span>                :            :   private ListenableFuture&lt;Void&gt; downloadBlob(</a>
+<a name="295"><span class="lineNum">     295 </span>                :            :       Digest digest,</a>
+<a name="296"><span class="lineNum">     296 </span>                :            :       OutputStream out,</a>
+<a name="297"><span class="lineNum">     297 </span>                :            :       @Nullable Supplier&lt;HashCode&gt; hashSupplier) {</a>
+<a name="298"><span class="lineNum">     298 </span>                :<span class="lineCov">          1 :     Context ctx = Context.current();</span></a>
+<a name="299"><span class="lineNum">     299 </span>                :<span class="lineCov">          1 :     AtomicLong offset = new AtomicLong(0);</span></a>
+<a name="300"><span class="lineNum">     300 </span>                :<span class="lineCov">          1 :     ProgressiveBackoff progressiveBackoff = new ProgressiveBackoff(retrier::newBackoff);</span></a>
+<a name="301"><span class="lineNum">     301 </span>                :<span class="lineCov">          1 :     ListenableFuture&lt;Void&gt; downloadFuture =</span></a>
+<a name="302"><span class="lineNum">     302 </span>                :<span class="lineCov">          1 :         Utils.refreshIfUnauthenticatedAsync(</span></a>
+<a name="303"><span class="lineNum">     303 </span>                :            :             () -&gt;</a>
+<a name="304"><span class="lineNum">     304 </span>                :<span class="lineCov">          1 :                 retrier.executeAsync(</span></a>
+<a name="305"><span class="lineNum">     305 </span>                :            :                     () -&gt;</a>
+<a name="306"><span class="lineNum">     306 </span>                :<span class="lineCov">          1 :                         ctx.call(</span></a>
+<a name="307"><span class="lineNum">     307 </span>                :            :                             () -&gt;</a>
+<a name="308"><span class="lineNum">     308 </span>                :<span class="lineCov">          1 :                                 requestRead(offset, progressiveBackoff, digest, out, hashSupplier)),</span></a>
+<a name="309"><span class="lineNum">     309 </span>                :            :                     progressiveBackoff),</a>
+<a name="310"><span class="lineNum">     310 </span>                :            :             callCredentialsProvider);</a>
+<a name="311"><span class="lineNum">     311 </span>                :            : </a>
+<a name="312"><span class="lineNum">     312 </span>                :<span class="lineCov">          1 :     return Futures.catchingAsync(</span></a>
+<a name="313"><span class="lineNum">     313 </span>                :            :         downloadFuture,</a>
+<a name="314"><span class="lineNum">     314 </span>                :            :         StatusRuntimeException.class,</a>
+<a name="315"><span class="lineNum">     315 </span>                :<span class="lineCov">          1 :         (e) -&gt; Futures.immediateFailedFuture(new IOException(e)),</span></a>
+<a name="316"><span class="lineNum">     316 </span>                :<span class="lineCov">          1 :         MoreExecutors.directExecutor());</span></a>
+<a name="317"><span class="lineNum">     317 </span>                :            :   }</a>
+<a name="318"><span class="lineNum">     318 </span>                :            : </a>
+<a name="319"><span class="lineNum">     319 </span>                :            :   public static String getResourceName(String instanceName, Digest digest) {</a>
+<a name="320"><span class="lineNum">     320 </span>                :<span class="lineCov">          1 :     String resourceName = &quot;&quot;;</span></a>
+<a name="321"><span class="lineNum">     321 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">          1 :     if (!instanceName.isEmpty()) {</span></a>
+<a name="322"><span class="lineNum">     322 </span>                :<span class="lineNoCov">          0 :       resourceName += instanceName + &quot;/&quot;;</span></a>
+<a name="323"><span class="lineNum">     323 </span>                :            :     }</a>
+<a name="324"><span class="lineNum">     324 </span>                :<span class="lineCov">          1 :     return resourceName + &quot;blobs/&quot; + DigestUtil.toString(digest);</span></a>
+<a name="325"><span class="lineNum">     325 </span>                :            :   }</a>
+<a name="326"><span class="lineNum">     326 </span>                :            : </a>
+<a name="327"><span class="lineNum">     327 </span>                :            :   private ListenableFuture&lt;Void&gt; requestRead(</a>
+<a name="328"><span class="lineNum">     328 </span>                :            :       AtomicLong offset,</a>
+<a name="329"><span class="lineNum">     329 </span>                :            :       ProgressiveBackoff progressiveBackoff,</a>
+<a name="330"><span class="lineNum">     330 </span>                :            :       Digest digest,</a>
+<a name="331"><span class="lineNum">     331 </span>                :            :       OutputStream out,</a>
+<a name="332"><span class="lineNum">     332 </span>                :            :       @Nullable Supplier&lt;HashCode&gt; hashSupplier) {</a>
+<a name="333"><span class="lineNum">     333 </span>                :<span class="lineCov">          1 :     String resourceName = getResourceName(options.remoteInstanceName, digest);</span></a>
+<a name="334"><span class="lineNum">     334 </span>                :<span class="lineCov">          1 :     SettableFuture&lt;Void&gt; future = SettableFuture.create();</span></a>
+<a name="335"><span class="lineNum">     335 </span>                :<span class="lineCov">          1 :     bsAsyncStub()</span></a>
+<a name="336"><span class="lineNum">     336 </span>                :<span class="lineCov">          1 :         .read(</span></a>
+<a name="337"><span class="lineNum">     337 </span>                :<span class="lineCov">          1 :             ReadRequest.newBuilder()</span></a>
+<a name="338"><span class="lineNum">     338 </span>                :<span class="lineCov">          1 :                 .setResourceName(resourceName)</span></a>
+<a name="339"><span class="lineNum">     339 </span>                :<span class="lineCov">          1 :                 .setReadOffset(offset.get())</span></a>
+<a name="340"><span class="lineNum">     340 </span>                :<span class="lineCov">          1 :                 .build(),</span></a>
+<a name="341"><span class="lineNum">     341 </span>                :<span class="lineCov">          1 :             new StreamObserver&lt;ReadResponse&gt;() {</span></a>
+<a name="342"><span class="lineNum">     342 </span>                :            :               @Override</a>
+<a name="343"><span class="lineNum">     343 </span>                :            :               public void onNext(ReadResponse readResponse) {</a>
+<a name="344"><span class="lineNum">     344 </span>                :<span class="lineCov">          1 :                 ByteString data = readResponse.getData();</span></a>
+<a name="345"><span class="lineNum">     345 </span>                :            :                 try {</a>
+<a name="346"><span class="lineNum">     346 </span>                :<span class="lineCov">          1 :                   data.writeTo(out);</span></a>
+<a name="347"><span class="lineNum">     347 </span>                :<span class="lineCov">          1 :                   offset.addAndGet(data.size());</span></a>
+<a name="348"><span class="lineNum">     348 </span>                :<span class="lineNoCov">          0 :                 } catch (IOException e) {</span></a>
+<a name="349"><span class="lineNum">     349 </span>                :<span class="lineNoCov">          0 :                   future.setException(e);</span></a>
+<a name="350"><span class="lineNum">     350 </span>                :            :                   // Cancel the call.</a>
+<a name="351"><span class="lineNum">     351 </span>                :<span class="lineNoCov">          0 :                   throw new RuntimeException(e);</span></a>
+<a name="352"><span class="lineNum">     352 </span>                :<span class="lineCov">          1 :                 }</span></a>
+<a name="353"><span class="lineNum">     353 </span>                :            :                 // reset the stall backoff because we've made progress or been kept alive</a>
+<a name="354"><span class="lineNum">     354 </span>                :<span class="lineCov">          1 :                 progressiveBackoff.reset();</span></a>
+<a name="355"><span class="lineNum">     355 </span>                :<span class="lineCov">          1 :               }</span></a>
+<a name="356"><span class="lineNum">     356 </span>                :            : </a>
+<a name="357"><span class="lineNum">     357 </span>                :            :               @Override</a>
+<a name="358"><span class="lineNum">     358 </span>                :            :               public void onError(Throwable t) {</a>
+<a name="359"><span class="lineNum">     359 </span>                :<span class="lineCov">          1 :                 Status status = Status.fromThrowable(t);</span></a>
+<a name="360"><span class="lineNum">     360 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :                 if (status.getCode() == Status.Code.NOT_FOUND) {</span></a>
+<a name="361"><span class="lineNum">     361 </span>                :<span class="lineCov">          1 :                   future.setException(new CacheNotFoundException(digest));</span></a>
+<a name="362"><span class="lineNum">     362 </span>                :            :                 } else {</a>
+<a name="363"><span class="lineNum">     363 </span>                :<span class="lineCov">          1 :                   future.setException(t);</span></a>
+<a name="364"><span class="lineNum">     364 </span>                :            :                 }</a>
+<a name="365"><span class="lineNum">     365 </span>                :<span class="lineCov">          1 :               }</span></a>
+<a name="366"><span class="lineNum">     366 </span>                :            : </a>
+<a name="367"><span class="lineNum">     367 </span>                :            :               @Override</a>
+<a name="368"><span class="lineNum">     368 </span>                :            :               public void onCompleted() {</a>
+<a name="369"><span class="lineNum">     369 </span>                :            :                 try {</a>
+<a name="370"><span class="lineNum">     370 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :                   if (hashSupplier != null) {</span></a>
+<a name="371"><span class="lineNum">     371 </span>                :<span class="lineCov">          1 :                     Utils.verifyBlobContents(</span></a>
+<a name="372"><span class="lineNum">     372 </span>                :<span class="lineCov">          1 :                         digest.getHash(), DigestUtil.hashCodeToString(hashSupplier.get()));</span></a>
+<a name="373"><span class="lineNum">     373 </span>                :            :                   }</a>
+<a name="374"><span class="lineNum">     374 </span>                :<span class="lineCov">          1 :                   out.flush();</span></a>
+<a name="375"><span class="lineNum">     375 </span>                :<span class="lineCov">          1 :                   future.set(null);</span></a>
+<a name="376"><span class="lineNum">     376 </span>                :<span class="lineCov">          1 :                 } catch (IOException e) {</span></a>
+<a name="377"><span class="lineNum">     377 </span>                :<span class="lineCov">          1 :                   future.setException(e);</span></a>
+<a name="378"><span class="lineNum">     378 </span>                :<span class="lineCov">          1 :                 }</span></a>
+<a name="379"><span class="lineNum">     379 </span>                :<span class="lineCov">          1 :               }</span></a>
+<a name="380"><span class="lineNum">     380 </span>                :            :             });</a>
+<a name="381"><span class="lineNum">     381 </span>                :<span class="lineCov">          1 :     return future;</span></a>
+<a name="382"><span class="lineNum">     382 </span>                :            :   }</a>
+<a name="383"><span class="lineNum">     383 </span>                :            : </a>
+<a name="384"><span class="lineNum">     384 </span>                :            :   @Override</a>
+<a name="385"><span class="lineNum">     385 </span>                :            :   public ListenableFuture&lt;Void&gt; uploadFile(Digest digest, Path path) {</a>
+<a name="386"><span class="lineNum">     386 </span>                :<span class="lineCov">          1 :     return uploader.uploadBlobAsync(</span></a>
+<a name="387"><span class="lineNum">     387 </span>                :<span class="lineCov">          1 :         HashCode.fromString(digest.getHash()),</span></a>
+<a name="388"><span class="lineNum">     388 </span>                :<span class="lineCov">          1 :         Chunker.builder().setInput(digest.getSizeBytes(), path).build(),</span></a>
+<a name="389"><span class="lineNum">     389 </span>                :            :         /* forceUpload= */ true);</a>
+<a name="390"><span class="lineNum">     390 </span>                :            :   }</a>
+<a name="391"><span class="lineNum">     391 </span>                :            : </a>
+<a name="392"><span class="lineNum">     392 </span>                :            :   @Override</a>
+<a name="393"><span class="lineNum">     393 </span>                :            :   public ListenableFuture&lt;Void&gt; uploadBlob(Digest digest, ByteString data) {</a>
+<a name="394"><span class="lineNum">     394 </span>                :<span class="lineCov">          1 :     return uploader.uploadBlobAsync(</span></a>
+<a name="395"><span class="lineNum">     395 </span>                :<span class="lineCov">          1 :         HashCode.fromString(digest.getHash()),</span></a>
+<a name="396"><span class="lineNum">     396 </span>                :<span class="lineCov">          1 :         Chunker.builder().setInput(data.toByteArray()).build(),</span></a>
+<a name="397"><span class="lineNum">     397 </span>                :            :         /* forceUpload= */ true);</a>
+<a name="398"><span class="lineNum">     398 </span>                :            :   }</a>
+<a name="399"><span class="lineNum">     399 </span>                :            : }</a>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.14</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
