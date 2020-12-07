@@ -1008,6 +1008,85 @@ public class RemoteCacheTests {
   }
 
   @Test
+  public void testDownloadMinimalDirectory2() throws Exception {
+    // Test that injecting the metadata for a tree artifact / remote output directory works
+
+    // arrange
+    InMemoryRemoteCache remoteCache = newRemoteCache();
+    // Output Directory:
+    // dir/file1
+    // dir/a/file2
+    // dir/file3
+    Digest d1 = remoteCache.addContents("content1");
+    Digest d2 = remoteCache.addContents("content2");
+    Digest d3 = remoteCache.addContents("content3");
+    FileNode file1 = FileNode.newBuilder().setName("file1").setDigest(d1).build();
+    FileNode file2 = FileNode.newBuilder().setName("file2").setDigest(d2).build();
+    FileNode file3 = FileNode.newBuilder().setName("file3").setDigest(d3).build();
+    Directory a = Directory.newBuilder().addFiles(file2).build();
+    Digest da = remoteCache.addContents(a);
+    Directory root =
+        Directory.newBuilder()
+            .addFiles(file1)
+            .addFiles(file3)
+            .addDirectories(DirectoryNode.newBuilder().setName("a").setDigest(da))
+            .build();
+    Tree t = Tree.newBuilder().setRoot(root).addChildren(a).build();
+    Digest dt = remoteCache.addContents(t);
+    ActionResult r =
+        ActionResult.newBuilder()
+            .setExitCode(0)
+            .addOutputDirectories(
+                OutputDirectory.newBuilder().setPath("outputs/dir").setTreeDigest(dt))
+            .build();
+
+    SpecialArtifact dir =
+        new SpecialArtifact(
+            artifactRoot,
+            PathFragment.create("outputs/dir"),
+            ActionsTestUtil.NULL_ARTIFACT_OWNER,
+            SpecialArtifactType.TREE);
+    dir.setGeneratingActionKey(ActionLookupData.create(ActionsTestUtil.NULL_ARTIFACT_OWNER, 0));
+
+    MetadataInjector injector = mock(MetadataInjector.class);
+
+    // act
+    InMemoryOutput inMemoryOutput =
+        remoteCache.downloadMinimal(
+            "action-id",
+            r,
+            ImmutableList.of(dir),
+            /* inMemoryOutputPath= */ null,
+            new FileOutErr(),
+            execRoot,
+            injector,
+            outputFilesLocker);
+
+    // assert
+    assertThat(inMemoryOutput).isNull();
+
+    TreeArtifactValue tree =
+        TreeArtifactValue.newBuilder(dir)
+            .putChild(
+                TreeFileArtifact.createTreeOutput(dir, "file1"),
+                new RemoteFileArtifactValue(toBinaryDigest(d1), d1.getSizeBytes(), 1, "action-id"))
+            .putChild(
+                TreeFileArtifact.createTreeOutput(dir, "a/file2"),
+                new RemoteFileArtifactValue(toBinaryDigest(d2), d2.getSizeBytes(), 1, "action-id"))
+            .putChild(
+                TreeFileArtifact.createTreeOutput(dir, "file3"),
+                new RemoteFileArtifactValue(toBinaryDigest(d3), d3.getSizeBytes(), 1, "action-id"))
+
+            .build();
+    verify(injector).injectTree(dir, tree);
+
+    Path outputBase = artifactRoot.getRoot().asPath();
+    assertThat(outputBase.readdir(Symlinks.NOFOLLOW)).isEmpty();
+
+    verify(outputFilesLocker).lock();
+  }
+
+  @Test
   public void testDownloadMinimalDirectoryFails() throws Exception {
     // Test that we properly fail when downloading the metadata of an output
     // directory fails
