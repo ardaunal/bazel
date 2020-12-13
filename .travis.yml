@@ -10,5 +10,5 @@ addons:
     - bazel
 
 script:
-  - bazelisk build //src:bazel-dev
-  - bazelisk test //src/test/java/com/google/devtools/build/lib/bazel/...
+  - bazel build //src:bazel-dev
+  - bazel test //src/test/java/com/google/devtools/build/lib/bazel/...
